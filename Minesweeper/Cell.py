@@ -90,9 +90,12 @@ class Cell:
             return -1
         return 1
 
-    def flagCell(self):
+    def flagCell(self, boolean):
         if not self.open:
-            self.flagged = not self.flagged
+            if boolean is None:
+                self.flagged = not self.flagged
+            else:
+                self.flagged = boolean
 
     def isOpen(self):
         return self.open

@@ -10,9 +10,9 @@ screenSize = (1000, 800)
 pygame.init()
 screen = pygame.display.set_mode((1000, 800))
 pygame.display.set_caption('Game?')
-font = pygame.font.SysFont(None, 30)
+# font = pygame.font.SysFont(None, 30)
 
-menu = Menu(font, screenSize)
+menu = Menu(screenSize)
 
 programRunning = True
 

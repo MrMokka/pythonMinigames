@@ -5,9 +5,8 @@ from Minesweeper.Minesweeper import Minesweeper
 
 
 class Menu:
-    def __init__(self, font, screenSize):
-        self.font = font
-        self.currentGame: InformalGame = Minesweeper(font, screenSize)
+    def __init__(self, screenSize):
+        self.currentGame: InformalGame = Minesweeper(screenSize)
 
     def eventLoop(self, event):
         if not self.currentGame is None:

@@ -1,36 +1,44 @@
 import random
 import pygame
+import sys
 
 from Menu.InformalGame import InformalGame
 from Minesweeper.Cell import Cell
 
 cells = []
 cellSize = 20
-cellGrid = (10, 10)
-maxBombs = 10
+cellGrid = (5, 5)  # Don't make too large please..
+mineCells = []
+maxBombs = 3
 
+sys.setrecursionlimit(cellGrid[0] * cellGrid[1])
 
 def createPlayArea(screenSize) -> pygame.Rect:
-    maxRectSize = pygame.Rect(0, 50, screenSize[0], screenSize[1])
+    maxRectSize = pygame.Rect(0, 80, screenSize[0], screenSize[1] - 100)
     initRect = pygame.Rect(0, 0, cellSize * (cellGrid[0]), cellSize * (cellGrid[1]))
-    initRect.center = (screenSize[0] / 2, screenSize[1] / 2)
+    # initRect.center = (screenSize[0] / 2, screenSize[1] / 2)
     playArea = initRect.fit(maxRectSize)
+    playArea.width += 1
+    playArea.height += 1
     print(playArea)
     return playArea
 
 
 class Minesweeper(InformalGame):
 
-    def __init__(self, font, screenSize):
+    def __init__(self, screenSize):
         self.roundActive = True
-        self.font = pygame.font.SysFont('arial', 16)
         self.playArea = createPlayArea(screenSize)
         # self.playArea = pygame.Rect(0, 0, cellSize * (cellGrid[0]), cellSize * (cellGrid[1]))
         # self.playArea.center = (screenSize[0] / 2, screenSize[1] / 2)
         global cellSize
-        cellSize = (self.playArea.width / cellGrid[0])
+        cellSize = int(self.playArea.width / cellGrid[0])
+        print("CellSize: " + str(cellSize))
+        print("CellGrid: " + str(cellGrid[0]))
+        self.font = pygame.font.SysFont('arial', int(cellSize / 2))
         self.resetGame()
         self.placeMines()
+        self.cellsOpened = 0
 
     def eventLoop(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -39,9 +47,9 @@ class Minesweeper(InformalGame):
 
     def resetGame(self):
         # Create cells
-        for y in range(0, cellGrid[0]):
+        for y in range(0, cellGrid[1]):
             column = []
-            for x in range(0, cellGrid[1]):
+            for x in range(0, cellGrid[0]):
                 column.append(
                     Cell(x, y, self.playArea.x + (x * cellSize), self.playArea.y + (y * cellSize), cellSize, self.font))
             cells.append(column)
@@ -54,13 +62,14 @@ class Minesweeper(InformalGame):
             y = random.randint(0, cellGrid[1] - 1)
             if not cells[y][x].isMine():
                 cells[y][x].setMine()
+                mineCells.append(cells[y][x])
                 bombCount += 1
                 # Add value on neighbours
                 for i in range(-1, 2):
                     for l in range(-1, 2):
                         if not (i == 0 and l == 0):
                             if (y + i) >= 0 and (x + l) >= 0:
-                                if (y + i) < cellGrid[0] and (x + l) < cellGrid[1]:
+                                if (y + i) < cellGrid[1] and (x + l) < cellGrid[0]:
                                     cells[y + i][x + l].addValue()
 
     def mouseClick(self, pos, button):
@@ -72,6 +81,7 @@ class Minesweeper(InformalGame):
             elif button[0]:
                 result = cellClicked.openCell()  # 1 = open, 0 = nothing, -1 = mine
                 if result == 1:
+                    self.cellsOpened += 1
                     if cellClicked.getValue() == 0:
                         cellPos = cellClicked.getIndex()
                         self.openNeighbours(cellPos[0], cellPos[1])
@@ -83,7 +93,13 @@ class Minesweeper(InformalGame):
                             if cell.isMine():
                                 cell.openCell()
             elif button[2]:
-                cellClicked.flagCell()
+                cellClicked.flagCell(None)
+            if self.cellsOpened == (cellGrid[0] * cellGrid[1]) - maxBombs:  # Gamve over, victory
+                for cell in mineCells:
+                    cell.flagCell(True)
+                self.roundActive = False
+                print("Game Completed!")
+
 
     def openNeighbours(self, baseX, baseY):
         for y in range(-1, 2):
@@ -95,6 +111,7 @@ class Minesweeper(InformalGame):
                             if not targetCell.isMine():
                                 if not targetCell.isOpen():
                                     targetCell.openCell()
+                                    self.cellsOpened += 1
                                     if targetCell.getValue() == 0:
                                         pass
                                         self.openNeighbours(x + baseX, y + baseY)
@@ -104,6 +121,7 @@ class Minesweeper(InformalGame):
         for column in cells:
             for cell in column:
                 cell.draw(screen)
+        # pygame.draw.rect(screen, (255, 0, 0), self.playArea)
 
     def getClickedCell(self, x, y) -> Cell:
         if 0 <= x < cellGrid[0] and 0 <= y < cellGrid[1]:
