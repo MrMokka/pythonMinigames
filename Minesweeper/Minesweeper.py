@@ -4,19 +4,20 @@ import sys
 
 from Menu.InformalGame import InformalGame
 from Minesweeper.Cell import Cell
+from Minesweeper.Button import Button
 
 cells = []
 cellSize = 20
-cellGrid = (5, 5)  # Don't make too large please..
+cellGrid = (10, 10)  # Don't make too large please..
 mineCells = []
-maxBombs = 3
+maxBombs = 10
 
 sys.setrecursionlimit(cellGrid[0] * cellGrid[1])
+
 
 def createPlayArea(screenSize) -> pygame.Rect:
     maxRectSize = pygame.Rect(0, 80, screenSize[0], screenSize[1] - 100)
     initRect = pygame.Rect(0, 0, cellSize * (cellGrid[0]), cellSize * (cellGrid[1]))
-    # initRect.center = (screenSize[0] / 2, screenSize[1] / 2)
     playArea = initRect.fit(maxRectSize)
     playArea.width += 1
     playArea.height += 1
@@ -37,8 +38,8 @@ class Minesweeper(InformalGame):
         print("CellGrid: " + str(cellGrid[0]))
         self.font = pygame.font.SysFont('arial', int(cellSize / 2))
         self.resetGame()
-        self.placeMines()
         self.cellsOpened = 0
+        self.resetButton = Button(10, 10, 40, 40)
 
     def eventLoop(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -46,13 +47,17 @@ class Minesweeper(InformalGame):
             self.mouseClick(pos, pygame.mouse.get_pressed())
 
     def resetGame(self):
-        # Create cells
+        global cells
+        cells = []
         for y in range(0, cellGrid[1]):
             column = []
             for x in range(0, cellGrid[0]):
                 column.append(
                     Cell(x, y, self.playArea.x + (x * cellSize), self.playArea.y + (y * cellSize), cellSize, self.font))
             cells.append(column)
+        self.cellsOpened = 0
+        self.roundActive = True
+        self.placeMines()
 
     def placeMines(self):
         # Add bombs to cells
@@ -73,6 +78,8 @@ class Minesweeper(InformalGame):
                                     cells[y + i][x + l].addValue()
 
     def mouseClick(self, pos, button):
+        if self.checkButtonsClicked(pos, button):
+            return
         clickPos = ((pos[0] - self.playArea.x) // cellSize, (pos[1] - self.playArea.y) // cellSize)
         if self.roundActive:
             cellClicked = self.getClickedCell(clickPos[0], clickPos[1])
@@ -100,7 +107,6 @@ class Minesweeper(InformalGame):
                 self.roundActive = False
                 print("Game Completed!")
 
-
     def openNeighbours(self, baseX, baseY):
         for y in range(-1, 2):
             for x in range(-1, 2):
@@ -116,12 +122,23 @@ class Minesweeper(InformalGame):
                                         pass
                                         self.openNeighbours(x + baseX, y + baseY)
 
+    def checkButtonsClicked(self, pos, button):
+        x, y = pos
+        if button[0]:
+            if self.resetButton.rect.collidepoint(x, y):
+                self.resetGame()
+                print("Game reset!")
+                return True
+            return False
+        return False
+
     def drawLoop(self, screen):
         # pygame.draw.rect(screen, (255, 0, 0), self.playArea)
         for column in cells:
             for cell in column:
                 cell.draw(screen)
         # pygame.draw.rect(screen, (255, 0, 0), self.playArea)
+        self.resetButton.draw(screen)
 
     def getClickedCell(self, x, y) -> Cell:
         if 0 <= x < cellGrid[0] and 0 <= y < cellGrid[1]:
