@@ -21,8 +21,14 @@ def createPlayArea(screenSize) -> pygame.Rect:
     playArea = initRect.fit(maxRectSize)
     playArea.width += 1
     playArea.height += 1
-    print(playArea)
+    print("Play area: " + playArea)
     return playArea
+
+
+def drawText(screen, border, text):
+    textRect = text.get_rect()
+    textRect.center = border.center
+    screen.blit(text, textRect)
 
 
 class Minesweeper(InformalGame):
@@ -30,16 +36,15 @@ class Minesweeper(InformalGame):
     def __init__(self, screenSize):
         self.roundActive = True
         self.playArea = createPlayArea(screenSize)
-        # self.playArea = pygame.Rect(0, 0, cellSize * (cellGrid[0]), cellSize * (cellGrid[1]))
-        # self.playArea.center = (screenSize[0] / 2, screenSize[1] / 2)
         global cellSize
         cellSize = int(self.playArea.width / cellGrid[0])
         print("CellSize: " + str(cellSize))
-        print("CellGrid: " + str(cellGrid[0]))
         self.font = pygame.font.SysFont('arial', int(cellSize / 2))
         self.resetGame()
         self.cellsOpened = 0
         self.resetButton = Button(10, 10, 40, 40)
+        self.bombCounter = pygame.Rect(70, 10, 60, 40)
+        self.scoreFont = pygame.font.SysFont('arial', 24)
 
     def eventLoop(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -139,6 +144,7 @@ class Minesweeper(InformalGame):
                 cell.draw(screen)
         # pygame.draw.rect(screen, (255, 0, 0), self.playArea)
         self.resetButton.draw(screen)
+        drawText(screen, self.bombCounter, str("Bombs: " + self.bombCounter))
 
     def getClickedCell(self, x, y) -> Cell:
         if 0 <= x < cellGrid[0] and 0 <= y < cellGrid[1]:
