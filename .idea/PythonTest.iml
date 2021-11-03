@@ -11,6 +11,7 @@
     <option name="namespacePackageFolders">
       <list>
         <option value="$MODULE_DIR$/Minesweeper" />
+        <option value="$MODULE_DIR$/Menu" />
       </list>
     </option>
   </component>

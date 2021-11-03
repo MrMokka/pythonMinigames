@@ -1,5 +1,7 @@
 import pygame
 
+from Minesweeper.Text import Text
+
 
 class Color:
     Border = (255, 255, 255)
@@ -7,7 +9,7 @@ class Color:
     Background = (189, 189, 189)
     MineBackground = (255, 0, 0)
     Mine = (0, 0, 0)
-    Flag = (255, 0, 0)
+    Flag = (255, 100, 100)
     Value = [
         (255, 255, 255),
         (0, 0, 255),
@@ -36,6 +38,7 @@ class Cell:
         self.flagged = False
         self.open = False
         self.font = font
+        self.textObj = Text(pygame.Rect(self.x, self.y, self.size, self.size), font)
 
     def draw(self, screen):
         outline = pygame.Rect(self.x, self.y, self.size, self.size)
@@ -44,7 +47,7 @@ class Cell:
             pygame.draw.rect(screen, Color.Border, outline)
             pygame.draw.rect(screen, Color.Background, inside)
             if self.flagged:
-                self.drawText(screen, outline, self.font.render(FlagChar, True, Color.Flag))
+                self.textObj.draw(screen)
         else:
             if self.mine:
                 pygame.draw.rect(screen, Color.MineBackground, outline)
@@ -58,17 +61,7 @@ class Cell:
                                    (self.x + (self.size / 2), self.y + (self.size / 2)),
                                    self.size / 3)
             elif self.value > 0:
-                self.drawText(screen, outline, self.font.render(str(self.value), True, Color.Value[self.value]))
-                # textRect = text.get_rect()
-                # textRect.center = outline.center
-                # screen.blit(text, textRect)
-                    # (self.x + (self.width / 3),
-                    #  self.y + (self.height / 3)))
-
-    def drawText(self, screen, border, text):
-        textRect = text.get_rect()
-        textRect.center = border.center
-        screen.blit(text, textRect)
+                self.textObj.draw(screen)
 
     def setMine(self, mine=True):
         self.mine = mine
@@ -81,27 +74,38 @@ class Cell:
 
     def addValue(self):
         self.value += 1
+        self.textObj.setText(str(self.value))
+        self.textObj.setColor(Color.Value[self.value])
 
-    def openCell(self) -> int:  # 1 = open, 0 = nothing, -1 = mine
-        if self.open or self.flagged:
-            return 0
+    def openCell(self) -> int:  # 1 = open, -1 = mine
         self.open = True
         if self.mine:
             return -1
         return 1
 
-    def flagCell(self, boolean):
+    def flagCell(self, boolean=None):
         if not self.open:
             if boolean is None:
                 self.flagged = not self.flagged
             else:
                 self.flagged = boolean
+            if self.flagged:
+                self.textObj.setText(FlagChar)
+                self.textObj.setColor(Color.Flag)
+            else:
+                self.textObj.setText(str(self.value))
+                self.textObj.setColor(Color.Value[self.value])
 
     def isOpen(self):
         return self.open
+
+    def isFlagged(self):
+        return self.flagged
 
     def getIndex(self):
         return self.indexX, self.indexY
 
     def print(self):
         print("Cell: " + str(self.indexX) + " : " + str(self.indexY))
+
+

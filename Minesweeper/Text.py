@@ -8,12 +8,14 @@ def drawText(screen, border, text):
 
 
 class Text:
-    def __init__(self, rect, text=""):
+    def __init__(self, rect: pygame.Rect, font: pygame.font, text="", color=(0, 0, 0)):
         self.rect = rect
         self.text = text
+        self.font = font
+        self.color = color
 
     def draw(self, screen):
-        drawText(screen, self.rect, self.text)
+        drawText(screen, self.rect, self.font.render(self.text, True, self.color))
 
     def getRect(self):
         return self.rect
@@ -26,3 +28,14 @@ class Text:
 
     def setText(self, text):
         self.text = text
+
+    def setFont(self, font: pygame.font):
+        self.font = font
+
+    def getFont(self):
+        return self.font
+
+    def setColor(self, color):
+        self.color = color
+
+
