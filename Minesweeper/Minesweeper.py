@@ -41,15 +41,23 @@ class Minesweeper(InformalGame.InformalGame):
         cellSize = int(self.playArea.width / cellGrid[0])
         print("CellSize: " + str(cellSize))
         self.font = pygame.font.SysFont('arial', int(cellSize / 2))
-        self.resetGame()
         self.cellsOpened = 0
         self.resetButton = Button(10, 10, 40, 40)
-        self.bombCounter = Text(pygame.Rect(70, 10, 60, 40), pygame.font.SysFont('arial', 24), "Bombs left: 0")
+        self.resetButton.setColors((255, 0, 0))
+        self.bombCounter = 0
+        self.bombCounterText = Text(pygame.Rect(300, 10, 200, 40), pygame.font.SysFont('arial', 18), "Bombs left: 0")
+
+        self.resetGame()
 
     def eventLoop(self, event):
+        pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
             self.mouseClick(pos, pygame.mouse.get_pressed())
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_z:
+                self.mouseClick(pos, [True, False, False])
+            if event.key == pygame.K_x:
+                self.mouseClick(pos, [False, False, True])
 
     def resetGame(self):
         global cells
@@ -63,6 +71,9 @@ class Minesweeper(InformalGame.InformalGame):
         self.cellsOpened = 0
         self.roundActive = True
         self.placeMines()
+        self.bombCounter = maxBombs
+        self.resetButton.setColors((255, 0, 0))
+        self.bombCounterText.setText("Bombs left: " + str(self.bombCounter))
 
     def placeMines(self):
         # Add bombs to cells
@@ -106,11 +117,19 @@ class Minesweeper(InformalGame.InformalGame):
                                 if cell.isMine():
                                     cell.openCell()
             elif button[2]:
-                cellClicked.flagCell()
+                didFlag = cellClicked.flagCell()  # 1 = flagged, 0 = not flagged
+                if didFlag:
+                    self.bombCounter -= 1
+                else:
+                    self.bombCounter += 1
+                self.bombCounterText.setText("Bombs left: " + str(self.bombCounter))
             if self.cellsOpened == (cellGrid[0] * cellGrid[1]) - maxBombs:  # Gamve over, victory
+                self.resetButton.setColors((0, 255, 0))
                 for cell in mineCells:
                     cell.flagCell(True)
                 self.roundActive = False
+                self.bombCounter = 0
+                self.bombCounterText.setText("Bombs left: " + str(self.bombCounter))
                 print("Game Completed!")
 
     def openNeighbours(self, baseX, baseY):
@@ -144,7 +163,8 @@ class Minesweeper(InformalGame.InformalGame):
                 cell.draw(screen)
         # pygame.draw.rect(screen, (255, 0, 0), self.playArea)
         self.resetButton.draw(screen)
-        # drawText(screen, self.bombCounter, "Bombs: " + str(self.bombCounter))
+        self.bombCounterText.draw(screen)
+        # drawText(screen, self.bombCounterText, "Bombs: " + str(self.bombCounterText))
 
     def getClickedCell(self, x, y) -> Cell:
         if 0 <= x < cellGrid[0] and 0 <= y < cellGrid[1]:

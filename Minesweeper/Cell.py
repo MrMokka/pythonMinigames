@@ -95,6 +95,7 @@ class Cell:
             else:
                 self.textObj.setText(str(self.value))
                 self.textObj.setColor(Color.Value[self.value])
+        return self.flagged
 
     def isOpen(self):
         return self.open
